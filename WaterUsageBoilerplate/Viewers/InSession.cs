@@ -8,10 +8,11 @@ using NAudio.Wave;
 using System.Data;
 using System.Numerics;
 using ScottPlot;
+using System.Globalization;
 
 namespace WaterUsageBoilerplate.Viewers
 {
-    public class InSession
+    public class InSession //nesting horror I'm sorry
     {
         public int SampleRate { get; set; }
         public WaveFileReader Reader { get; set; }
@@ -22,21 +23,32 @@ namespace WaterUsageBoilerplate.Viewers
         public List<top5Frequencies>? topFrequencies { get; set; }
         public Messaging messaging { get; set; }
         public VisualizeData visualize { get; set; }
+        public DBSCANNAH dbScan { get; set; }
 
-        public InSession(string FilePath)
+        public InSession(string FilePath, string usageSelected)
         {
             visualize = new VisualizeData();
-            Reader = new WaveFileReader(@$"{FilePath}");
-            WavFormat = Reader.WaveFormat;
-            SampleRate = WavFormat.SampleRate;
-            
-            AudioStuff = new AudioStuffs()
-            {
-                reader = Reader,
-                waveFormat = WavFormat
-            };
+            dbScan = new();
             messaging = new Messaging();
-            messaging.CurrentMessage = AudioStuff.FileMessenger();
+            messaging.WaterUsageActivity = usageSelected;
+
+            if (usageSelected == null)
+            {
+                messaging.CurrentMessage = "Please enter what you're going to do via the dropdown";
+            }
+            else
+            {
+                Reader = new WaveFileReader(@$"{FilePath}");
+                WavFormat = Reader.WaveFormat;
+                SampleRate = WavFormat.SampleRate;
+
+                AudioStuff = new AudioStuffs()
+                {
+                    reader = Reader,
+                    waveFormat = WavFormat
+                };
+                messaging.CurrentMessage = AudioStuff.FileMessenger();
+            }
 
             if (messaging.CurrentMessage == "Now calculating water usage...")
             {
@@ -48,7 +60,9 @@ namespace WaterUsageBoilerplate.Viewers
                     sampleRate = SampleRate
                 };
 
-                topFrequencies = fftProcessing.GetIncrements();
+                topFrequencies = fftProcessing.GetIncrements(); 
+                messaging.TotalWaterUsage = dbScan.DBSCAN(topFrequencies, 
+                    double.Parse(messaging.TotalWaterUsage, CultureInfo.InvariantCulture), messaging.WaterUsageActivity).ToString();
                 messaging.CurrentMessage = "Complete";
                 visualize.PlotData(topFrequencies);
             }

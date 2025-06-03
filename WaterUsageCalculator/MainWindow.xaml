@@ -22,7 +22,15 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ContentControl Grid.Row="1" Grid.Column="0" Content="{Binding visualize.myPlot, Mode=OneTime}"/>
+        <ContentControl Grid.Row="1" Grid.Column="0" Panel.ZIndex="2" Content="{Binding visualize.myPlot, Mode=OneTime}"/>
+        <ComboBox Grid.Row="1" Grid.Column="0" Panel.ZIndex="3" Margin="10, 10, 13 , 10" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100" Height="30"
+                  Background="White" BorderThickness="0" SelectionChanged="ComboBox_SelectionChanged">
+            <ComboBoxItem Content="Shower" FontFamily="Times New Roman"/>
+            <ComboBoxItem Content="Using Other..." FontFamily="Times New Roman"/>
+        </ComboBox>
+        <Label Grid.Row="1" Grid.Column="0" Panel.ZIndex="1" Content="Graph Will Go Here..." FontFamily="Corbel Light" FontWeight="Light" 
+               Foreground="LightGray" FontSize="36" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
         <Button Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" Click="Button_Click" Visibility="{Binding messaging.DontHideMessage, 
             Converter={StaticResource BooleanToVisibility}}" Content="Drop .wav File Here" FontSize="24" FontFamily="Corbel Light" Background="AliceBlue" BorderThickness="10" BorderBrush="Lavender"/>
 
@@ -40,7 +48,11 @@
             <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="21" FontFamily="Times New Roman" Content="{Binding messaging.CurrentMessage}"/>
 
             <Label Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" FontSize="18" FontFamily="Corbel Light" FontWeight="ExtraBold" Content="Total Water Usage:"/>
-            <Label Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="21" FontFamily="Times New Roman" Content="Placebo Value"/>
+            <Label Grid.Row="0" Grid.Column="1" x:Name="CurrentWaterUsage" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="21" FontFamily="Times New Roman" 
+                   Content="Liters: 0"/>
+            <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10,10,13,10" Content="Reset" BorderThickness="0" 
+                    BorderBrush="DarkGray" Click="Button_Click_1" FontFamily="Times New Roman" Foreground="Gray"/>
         </Grid>
     </Grid>
 </Window>
+ 

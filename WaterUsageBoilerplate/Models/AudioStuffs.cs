@@ -25,6 +25,12 @@ namespace WaterUsageBoilerplate.Models
             {
                 return "Must be mono"; //screw interleaving
             }
+
+            TimeSpan tSpan = reader.TotalTime;
+            if (tSpan.TotalSeconds < 5)
+            {
+                return "Must be longer than 5 seconds";
+            }
             return "Now calculating water usage...";
         }
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ScottPlot.WPF;
 using ScottPlot;
+using HarfBuzzSharp;
 
 namespace WaterUsageBoilerplate.Models
 {
@@ -18,9 +19,12 @@ namespace WaterUsageBoilerplate.Models
             List<float> magnitudes = new List<float>();
 
             foreach (top5Frequencies i in dataList)
-            {
-                frequencies.AddRange(i.Frequencies);
-                magnitudes.AddRange(i.Magnitudes);
+            { 
+                if (i.Frequencies.Sum() / i.Frequencies.Count <= 1550 && i.Magnitudes.Sum() / i.Magnitudes.Count <= 28)
+                {
+                    frequencies.Add((i.Frequencies.Sum() / i.Frequencies.Count) / 1550);
+                    magnitudes.Add((i.Magnitudes.Sum() / i.Magnitudes.Count) / 28); 
+                }
             }
             float[] initializer = frequencies.ToArray();
             float[] initializer2 = magnitudes.ToArray();

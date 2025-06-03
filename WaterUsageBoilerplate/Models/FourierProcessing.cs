@@ -18,7 +18,7 @@ namespace WaterUsageBoilerplate.Models
             float[] InitialFFTWindow = new float[(int)(FFTIncrements * 0.50) + FFTIncrements]; //hann, pad, then convert to complex
             float[] FinalFFTWindow; Complex32[] complexArray; List<top5Frequencies> frequencyList = new List<top5Frequencies>();
 
-            for (int i = 0; i < meineAudioData.Length - (int)(FFTIncrements * 1.5); i += FFTIncrements)
+            for (int i = 0; i < meineAudioData.Length - (int)(FFTIncrements * 1.5); i += FFTIncrements / 2)
             {
                 Array.Copy(meineAudioData, i, InitialFFTWindow, 0, (int)(FFTIncrements * 0.50) + FFTIncrements);
                 InitialFFTWindow = ApplyHannWindow(InitialFFTWindow);
@@ -39,7 +39,7 @@ namespace WaterUsageBoilerplate.Models
             return frequencyList;
         }
 
-        public float[] ApplyHannWindow(float[] audioIncrement) //smooth out the ends of the signal
+        private float[] ApplyHannWindow(float[] audioIncrement) //smooth out the ends of the signal
         {
             for (int j = 0; j < audioIncrement.Length; j++)
             {   
@@ -50,7 +50,7 @@ namespace WaterUsageBoilerplate.Models
             return audioIncrement;
         }
 
-        public int FindNearestPowerOf2() //ensure that the buffer length is a power of 2 to achieve O(logn) time complexity (Cooley-Turkey algorithm needs this!)
+        private int FindNearestPowerOf2() //ensure that the buffer length is a power of 2 to achieve O(logn) time complexity (Cooley-Turkey algorithm needs this!)
         {
             int sampleSize = (int)((0.2 * sampleRate) * 1.5), placeboNum = 2;
             /*  
@@ -68,7 +68,7 @@ namespace WaterUsageBoilerplate.Models
             return sampleSize;
         }
 
-        public float[] ZeroPadArray(float[] InitialFFTWin, int newLength) //make array size a power of 2
+        private float[] ZeroPadArray(float[] InitialFFTWin, int newLength) //make array size a power of 2
         {
             float[] newFFTWindow = new float[newLength];
             Array.Copy(InitialFFTWin, 0, newFFTWindow, 0, InitialFFTWin.Length);
@@ -81,24 +81,26 @@ namespace WaterUsageBoilerplate.Models
             Fourier.Forward(FFTWindow, FourierOptions.NoScaling);
 
             float[] magnitudeSpectrum = FFTWindow.Take(FFTWindow.Length / 2).Select(x => x.Magnitude).ToArray(); //Get magnitudes
-            Dictionary<int, float> audioPeaks = new Dictionary<int, float>();
+            List<int> location = new(); List<float> magnitudes = new();
+            Tuple<List<int>, List<float>> audioPeaks = new(location, magnitudes);
             List<float> topFrequencies = new List<float>(); List<float> topMagnitudes = new List<float>();
             Tuple<List<float>, List<float>> returnValue = new(topFrequencies, topMagnitudes);
-            
+
             for (int i = 1; i < magnitudeSpectrum.Length - 1; i++)
             {
-                if (magnitudeSpectrum[i] > magnitudeSpectrum[i + 1] && magnitudeSpectrum[i] > magnitudeSpectrum[i - 1] && magnitudeSpectrum[i] > magnitudeSpectrum.Max() * 0.1f) //extrapolate out overtone shit by finding peaks
+                if (magnitudeSpectrum[i] > magnitudeSpectrum[i + 1] && magnitudeSpectrum[i] > magnitudeSpectrum[i - 1] && magnitudeSpectrum[i] > 10 && magnitudeSpectrum[i] <= 28) //extrapolate out overtone shit by finding peaks
                 {
-                    audioPeaks.Add(i, magnitudeSpectrum[i]);
+                    location.Add(i);
+                    magnitudes.Add(magnitudeSpectrum[i]);
                 }
             }
-            int takeNum = (audioPeaks.Count < 5) ? audioPeaks.Count : 5;
-            audioPeaks = audioPeaks.OrderByDescending(x => x.Value).Take(takeNum).ToDictionary();
+            int takeNum = (location.Count < 5) ? location.Count : 5;
+            location = location.OrderByDescending(x => x).Take(takeNum).ToList();
 
-            foreach (var i in audioPeaks)
+            for (int k = 0; k < location.Count; k++)
             {
-                topFrequencies.Add(((float)i.Key / (float)FFTWindow.Length) * (float)sampleRate);
-                topMagnitudes.Add((float)i.Value);
+                topFrequencies.Add(((float)location[k] / (float)FFTWindow.Length) * (float)sampleRate);
+                topMagnitudes.Add((float)magnitudes[k]);
             }
             /*
             if (topFrequencies.Count == 0)
